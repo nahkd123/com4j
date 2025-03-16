@@ -10,10 +10,87 @@
 	<artifactId>com4j-realtimestylus</artifactId>
 	<name>COM4J RealTimeStylus</name>
 	<description>COM declaration for RealTimeStylus (Tablet PC)</description>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.lwjgl</groupId>
+				<artifactId>lwjgl-bom</artifactId>
+				<version>3.3.6</version>
+				<scope>import</scope>
+				<type>pom</type>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<dependencies>
 		<dependency>
 			<groupId>io.github.nahkd123</groupId>
 			<artifactId>com4j-base</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl-assimp</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl-glfw</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl-openal</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl-opengl</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl-stb</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl</artifactId>
+			<classifier>natives-windows</classifier>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl-assimp</artifactId>
+			<classifier>natives-windows</classifier>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl-glfw</artifactId>
+			<classifier>natives-windows</classifier>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl-openal</artifactId>
+			<classifier>natives-windows</classifier>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl-opengl</artifactId>
+			<classifier>natives-windows</classifier>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl-stb</artifactId>
+			<classifier>natives-windows</classifier>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 	<build>
@@ -24,7 +101,8 @@
 				<version>3.13.0</version>
 				<configuration>
 					<annotationProcessors>
-						<annotationProcessor>io.github.nahkd123.com4j.annotation.Com4jAnnotationProcessor</annotationProcessor>
+						<annotationProcessor>
+							io.github.nahkd123.com4j.annotation.Com4jAnnotationProcessor</annotationProcessor>
 					</annotationProcessors>
 				</configuration>
 			</plugin>

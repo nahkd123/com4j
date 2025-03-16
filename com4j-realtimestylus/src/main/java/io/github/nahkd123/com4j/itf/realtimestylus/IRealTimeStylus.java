@@ -63,6 +63,12 @@ public abstract class IRealTimeStylus extends IUnknown implements RealTimeStylus
 	@ComMethod(index = 18)
 	public abstract HResult GetStylusAsyncPluginCount(MemorySegment pcPlugins);
 
+	@ComMethod(index = 19)
+	public abstract HResult get_ChildRealTimeStylusPlugin(MemorySegment ppiRTS);
+
+	@ComMethod(index = 20)
+	public abstract HResult putref_ChildRealTimeStylusPlugin(MemorySegment piRTS);
+
 	public boolean isEnabled() {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment pfEnable = arena.allocate(ValueLayout.JAVA_INT);
@@ -93,6 +99,14 @@ public abstract class IRealTimeStylus extends IUnknown implements RealTimeStylus
 	 * @param hwnd The HWND of window.
 	 */
 	public void setHwnd(long hwnd) {
-		put_HWND(MemorySegment.ofAddress(hwnd));
+		put_HWND(MemorySegment.ofAddress(hwnd)).throwIfFail();
+	}
+
+	public void addPlugin(int index, IStylusSyncPlugin plugin) {
+		AddStylusSyncPlugin(index, plugin.getComPointer()).throwIfFail();
+	}
+
+	public void addPlugin(int index, IStylusAsyncPlugin plugin) {
+		AddStylusAsyncPlugin(index, plugin.getComPointer()).throwIfFail();
 	}
 }
