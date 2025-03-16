@@ -58,9 +58,9 @@ public interface Type {
 
 	record OfClass(Class<?> clazz) implements Type {
 		private static final Map<Class<?>, int[]> OPCODES = Map.of(
-			void.class, new int[] { -1, -1,-1, Opcodes.RETURN },
-			byte.class, new int[] { -1, -1, Opcodes.T_BYTE, -1 },
-			short.class, new int[] { -1, -1, Opcodes.T_SHORT, -1 },
+			void.class, new int[] { -1, -1, -1, Opcodes.RETURN },
+			byte.class, new int[] { Opcodes.ILOAD, Opcodes.ISTORE, Opcodes.T_BYTE, -1 },
+			short.class, new int[] { Opcodes.ILOAD, Opcodes.ISTORE, Opcodes.T_SHORT, -1 },
 			int.class, new int[] { Opcodes.ILOAD, Opcodes.ISTORE, Opcodes.T_INT, Opcodes.IRETURN },
 			long.class, new int[] { Opcodes.LLOAD, Opcodes.LSTORE, Opcodes.T_LONG, Opcodes.LRETURN },
 			float.class, new int[] { Opcodes.FLOAD, Opcodes.FSTORE, Opcodes.T_FLOAT, Opcodes.FRETURN },
