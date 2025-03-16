@@ -105,6 +105,15 @@ public interface ComFactory {
 
 	/**
 	 * <p>
+	 * Get BSTR utils for managing BSTRs.
+	 * </p>
+	 * 
+	 * @return The BSTR utils.
+	 */
+	Bstr bstr();
+
+	/**
+	 * <p>
 	 * Get the main instance of {@link ComFactory}. The instance will only be
 	 * initialized when this method being called for the first time. The instance
 	 * will use {@link Arena#ofAuto()} to manage memory and

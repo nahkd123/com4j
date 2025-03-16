@@ -14,6 +14,7 @@ import java.lang.invoke.MethodType;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.github.nahkd123.com4j.Bstr;
 import io.github.nahkd123.com4j.ComFactory;
 import io.github.nahkd123.com4j.ComUtils;
 import io.github.nahkd123.com4j.impl.wrapper.ComWrapperInfo;
@@ -39,6 +40,7 @@ public class ComFactoryImpl implements ComFactory {
 	private Arena factoryArena;
 	private Linker linker;
 	private SymbolLookup ole32;
+	private BstrImpl bstr;
 
 	private MethodHandle CoInitialize;
 	private MethodHandle CoCreateInstance;
@@ -54,6 +56,7 @@ public class ComFactoryImpl implements ComFactory {
 		this.linker = linker;
 		// kernel32 = SymbolLookup.libraryLookup("kernel32.dll", factoryArena);
 		ole32 = SymbolLookup.libraryLookup("ole32.dll", factoryArena);
+		bstr = new BstrImpl(factoryArena, linker, ole32);
 
 		CoInitialize = linker.downcallHandle(ole32.findOrThrow("CoInitialize"), FunctionDescriptor.of(
 			HResult.LAYOUT,
@@ -79,6 +82,11 @@ public class ComFactoryImpl implements ComFactory {
 		}
 
 		return instance;
+	}
+
+	@Override
+	public Bstr bstr() {
+		return bstr;
 	}
 
 	@Override
