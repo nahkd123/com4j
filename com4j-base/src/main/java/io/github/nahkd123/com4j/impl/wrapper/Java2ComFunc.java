@@ -62,7 +62,7 @@ public record Java2ComFunc(String name, MethodHandle sourceMethod, MemorySegment
 			Object[] javaArgs = new Object[sourceType.parameterCount()];
 			javaArgs[0] = javaObjLookup.apply(foreignSelf);
 			for (int i = 1; i < sourceType.parameterCount(); i++)
-				javaArgs[i] = params[i].convertToJava(foreignArgs[i]);
+				javaArgs[i] = params[i].convertToJava(foreignArgs[i - 1]);
 
 			try (Arena localArena = Arena.ofConfined()) {
 				Object javaResult = source.invokeWithArguments(List.of(javaArgs));
