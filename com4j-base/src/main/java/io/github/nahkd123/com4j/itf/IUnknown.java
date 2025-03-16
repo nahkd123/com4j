@@ -60,7 +60,7 @@ public abstract class IUnknown {
 	public HResult QueryInterface(Guid iid, MemorySegment ppvObject) {
 		ensureNotDestroyed();
 
-		if (ComUtils.isAssignableTo(iid, this.getClass())) {
+		if (ComUtils.isAssignableTo(iid, ComUtils.findComInterface(getClass()))) {
 			ppvObject.set(ValueLayout.ADDRESS, 0L, getComPointer());
 			AddRef();
 			return HResult.SUCCEED;
