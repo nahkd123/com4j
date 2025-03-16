@@ -1,0 +1,33 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>io.github.nahkd123</groupId>
+		<artifactId>com4j</artifactId>
+		<version>${project.version}</version>
+	</parent>
+	<artifactId>com4j-realtimestylus</artifactId>
+	<name>COM4J RealTimeStylus</name>
+	<description>COM declaration for RealTimeStylus (Tablet PC)</description>
+	<dependencies>
+		<dependency>
+			<groupId>io.github.nahkd123</groupId>
+			<artifactId>com4j-base</artifactId>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.13.0</version>
+				<configuration>
+					<annotationProcessors>
+						<annotationProcessor>io.github.nahkd123.com4j.annotation.Com4jAnnotationProcessor</annotationProcessor>
+					</annotationProcessors>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

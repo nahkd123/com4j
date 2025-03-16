@@ -1,0 +1,13 @@
+# Parent
+/target/
+
+/.settings/
+/.classpath
+/.project
+
+# Submodules
+/*/target/
+
+/*/.settings/
+/*/.classpath
+/*/.project
