@@ -17,12 +17,18 @@
 	<modules>
 		<module>com4j-base</module>
 		<module>com4j-realtimestylus</module>
+		<module>com4j-automation</module>
 	</modules>
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
 				<groupId>io.github.nahkd123</groupId>
 				<artifactId>com4j-base</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.github.nahkd123</groupId>
+				<artifactId>com4j-automation</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
