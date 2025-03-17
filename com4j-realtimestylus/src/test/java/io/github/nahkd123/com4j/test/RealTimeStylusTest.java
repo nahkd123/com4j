@@ -57,8 +57,8 @@ public class RealTimeStylusTest {
 				int tcid = tcids[i];
 				IInkTablet tablet = rts.getTabletFromContextId(tcid);
 				System.out.println("  Tablet #%d".formatted(i + 1));
-				System.out.println("    Name: %s".formatted(tablet.getName()));
-				System.out.println("    PnP ID: %s".formatted(tablet.getPlugAndPlayId()));
+				System.out.println("    Name: %s (PnP: %s)".formatted(
+					tablet.getName(), tablet.getPlugAndPlayId()));
 			}
 		}
 

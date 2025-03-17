@@ -12,7 +12,11 @@ import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
+
+import io.github.nahkd123.com4j.ComFactory;
+import io.github.nahkd123.com4j.itf.IUnknown;
 
 public record ForeignConverter<T>(Class<T> javaType, Class<?> targetType, MemoryLayout layout, MethodHandle fromForeign, MethodHandle toForeign, boolean useArena) {
 
@@ -64,7 +68,31 @@ public record ForeignConverter<T>(Class<T> javaType, Class<?> targetType, Memory
 	 *                 {@link ForeignConvertible}.
 	 * @return The converter for converting between Java type and foreign type.
 	 */
+	@SuppressWarnings("unchecked")
 	public static <T> ForeignConverter<T> createConverter(Class<T> javaType) {
+		if (IUnknown.class.isAssignableFrom(javaType)) {
+			Class<?> targetType = MemorySegment.class;
+			MemoryLayout layout = ValueLayout.ADDRESS.withTargetLayout(ValueLayout.ADDRESS);
+			ComFactory factory = ComFactory.instance();
+			Function<MemorySegment, T> fromForeign = comPtr -> (T) factory
+				.wrap(comPtr, (Class<? extends IUnknown>) javaType);
+			Function<T, MemorySegment> toForeign = javaObj -> ((IUnknown) javaObj).getComPointer();
+			MethodHandles.Lookup lookup = MethodHandles.lookup();
+
+			try {
+				MethodHandle funcHandle = lookup.findVirtual(
+					Function.class,
+					"apply",
+					MethodType.genericMethodType(1));
+				MethodHandle fromForeignHandle = funcHandle.bindTo(fromForeign);
+				MethodHandle toForeignHandle = funcHandle.bindTo(toForeign);
+				return new ForeignConverter<T>(javaType, targetType, layout, fromForeignHandle, toForeignHandle, false);
+			} catch (ReflectiveOperationException t) {
+				throw new IllegalArgumentException("Unable to derive IUnknown foreign converter for %s"
+					.formatted(javaType));
+			}
+		}
+
 		try {
 			ForeignConvertible convertibleInfo = javaType.getDeclaredAnnotation(ForeignConvertible.class);
 			if (convertibleInfo == null) throw new IllegalArgumentException("%s is not annotated with %s".formatted(

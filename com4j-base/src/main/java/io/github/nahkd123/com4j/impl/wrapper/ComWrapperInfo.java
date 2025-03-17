@@ -30,6 +30,7 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
 
+import io.github.nahkd123.com4j.ComFactory;
 import io.github.nahkd123.com4j.annotation.ComMethod;
 import io.github.nahkd123.com4j.conversion.ConvertFromForeign;
 import io.github.nahkd123.com4j.conversion.ConvertToForeign;
@@ -65,7 +66,6 @@ public record ComWrapperInfo<T extends IUnknown>(Class<T> interfaceType, Class<?
 	private static final Method $Arena$close = $Arena.method("close", MethodDescriptor.ofVoid());
 
 	private static MethodGenerator pushMemoryLayout(MethodGenerator g, Class<?> type) {
-		// Primitives
 		if (type == byte.class) return g.push($ValueLayout.staticField("JAVA_BYTE", Type.of(ValueLayout.OfByte.class)));
 		if (type == short.class) return g.push($ValueLayout.staticField("JAVA_SHORT", Type.of(ValueLayout.OfShort.class)));
 		if (type == int.class) return g.push($ValueLayout.staticField("JAVA_INT", Type.of(ValueLayout.OfInt.class)));
@@ -75,8 +75,8 @@ public record ComWrapperInfo<T extends IUnknown>(Class<T> interfaceType, Class<?
 		if (type == boolean.class) return g.push($ValueLayout.staticField("JAVA_BOOLEAN", Type.of(ValueLayout.OfBoolean.class)));
 		if (type == char.class) return g.push($ValueLayout.staticField("JAVA_CHAR", Type.of(ValueLayout.OfChar.class)));
 		if (type == MemorySegment.class) return g.push($ValueLayout$ADDRESS);
+		if (IUnknown.class.isAssignableFrom(type)) return g.push($ValueLayout$ADDRESS);
 
-		// Conversions
 		if (type.isAnnotationPresent(ForeignConvertible.class)) {
 			Class<?> target = type.getAnnotation(ForeignConvertible.class).value();
 
@@ -97,6 +97,7 @@ public record ComWrapperInfo<T extends IUnknown>(Class<T> interfaceType, Class<?
 	private static boolean requiresArena(Class<?> type) {
 		if (type.isPrimitive()) return false;
 		if (type == MemorySegment.class) return false;
+		if (IUnknown.class.isAssignableFrom(type)) return false;
 
 		if (type.isAnnotationPresent(ForeignConvertible.class)) {
 			java.lang.reflect.Method reflectedMethod = Stream.of(type.getDeclaredMethods())
@@ -118,6 +119,10 @@ public record ComWrapperInfo<T extends IUnknown>(Class<T> interfaceType, Class<?
 		if (type.isPrimitive()) return g.inline(source);
 		if (type == MemorySegment.class) return g.inline(source);
 
+		if (IUnknown.class.isAssignableFrom(type)) {
+			return g.inline(source).invokeVirtual(Type.of(IUnknown.class).method("getComPointer", MethodDescriptor.of($MemorySegment)));
+		}
+
 		if (type.isAnnotationPresent(ForeignConvertible.class)) {
 			java.lang.reflect.Method reflectedMethod = Stream.of(type.getDeclaredMethods())
 				.filter(m -> m.isAnnotationPresent(ConvertToForeign.class))
@@ -136,6 +141,14 @@ public record ComWrapperInfo<T extends IUnknown>(Class<T> interfaceType, Class<?
 	private static MethodGenerator invokeConvertFromForeign(MethodGenerator g, Class<?> type, Runnable source) {
 		if (type.isPrimitive()) return g.inline(source);
 		if (type == MemorySegment.class) return g.inline(source);
+
+		if (IUnknown.class.isAssignableFrom(type)) {
+			Type factoryType = Type.of(ComFactory.class);
+			Runnable factoryInst = () -> g.invokeStatic(factoryType.method("instance", MethodDescriptor.of(factoryType)));
+			return g.inline(factoryInst).invokeInterface(
+				factoryType.method("wrap", MethodDescriptor.of(Type.of(IUnknown.class), $MemorySegment, Type.of(Class.class))),
+				source, () -> g.ldc(type));
+		}
 
 		if (type.isAnnotationPresent(ForeignConvertible.class)) {
 			Executable executable = Stream.of(type.getDeclaredConstructors())
@@ -164,6 +177,7 @@ public record ComWrapperInfo<T extends IUnknown>(Class<T> interfaceType, Class<?
 	private static Type getForeignType(Class<?> type) {
 		if (type.isPrimitive()) return Type.of(type);
 		if (type == MemorySegment.class) return Type.of(type);
+		if (IUnknown.class.isAssignableFrom(type)) return $MemorySegment;
 
 		if (type.isAnnotationPresent(ForeignConvertible.class)) {
 			Class<?> target = type.getAnnotation(ForeignConvertible.class).value();

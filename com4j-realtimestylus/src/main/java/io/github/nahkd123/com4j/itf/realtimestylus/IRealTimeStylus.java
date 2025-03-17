@@ -35,7 +35,7 @@ public abstract class IRealTimeStylus extends IUnknown implements RealTimeStylus
 	public abstract HResult put_WindowInputRectangle(MemorySegment prcWndInputRect);
 
 	@ComMethod(index = 9)
-	public abstract HResult AddStylusSyncPlugin(int iIndex, MemorySegment piPlugin);
+	public abstract HResult AddStylusSyncPlugin(int iIndex, IStylusSyncPlugin plugin);
 
 	@ComMethod(index = 10)
 	public abstract HResult RemoveStylusSyncPlugin(int iIndex, MemorySegment ppiPlugin);
@@ -50,7 +50,7 @@ public abstract class IRealTimeStylus extends IUnknown implements RealTimeStylus
 	public abstract HResult GetStylusSyncPluginCount(MemorySegment pcPlugins);
 
 	@ComMethod(index = 14)
-	public abstract HResult AddStylusAsyncPlugin(int iIndex, MemorySegment piPlugin);
+	public abstract HResult AddStylusAsyncPlugin(int iIndex, IStylusAsyncPlugin plugin);
 
 	@ComMethod(index = 15)
 	public abstract HResult RemoveStylusAsyncPlugin(int iIndex, MemorySegment ppiPlugin);
@@ -129,11 +129,11 @@ public abstract class IRealTimeStylus extends IUnknown implements RealTimeStylus
 	}
 
 	public void addPlugin(int index, IStylusSyncPlugin plugin) {
-		AddStylusSyncPlugin(index, plugin.getComPointer()).throwIfFail();
+		AddStylusSyncPlugin(index, plugin).throwIfFail();
 	}
 
 	public void addPlugin(int index, IStylusAsyncPlugin plugin) {
-		AddStylusAsyncPlugin(index, plugin.getComPointer()).throwIfFail();
+		AddStylusAsyncPlugin(index, plugin).throwIfFail();
 	}
 
 	public IInkTablet getTabletFromContextId(int tcid) {
