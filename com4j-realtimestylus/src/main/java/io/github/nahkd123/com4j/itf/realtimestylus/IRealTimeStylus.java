@@ -4,6 +4,7 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
+import io.github.nahkd123.com4j.ComFactory;
 import io.github.nahkd123.com4j.annotation.ComInterface;
 import io.github.nahkd123.com4j.annotation.ComMethod;
 import io.github.nahkd123.com4j.itf.IUnknown;
@@ -69,6 +70,31 @@ public abstract class IRealTimeStylus extends IUnknown implements RealTimeStylus
 	@ComMethod(index = 20)
 	public abstract HResult putref_ChildRealTimeStylusPlugin(MemorySegment piRTS);
 
+	// TODO index 21: AddCustomStylusDataToQueue
+	@ComMethod(index = 21)
+	public abstract void AddCustomStylusDataToQueue();
+
+	// TODO index 22: ClearStylusQueues
+	@ComMethod(index = 22)
+	public abstract void ClearStylusQueues();
+
+	// TODO index 23: SetAllTabletsMode
+	@ComMethod(index = 23)
+	public abstract void SetAllTabletsMode();
+
+	// TODO index 24: SetSingleTabletMode
+	@ComMethod(index = 24)
+	public abstract void SetSingleTabletMode();
+
+	@ComMethod(index = 25)
+	public abstract HResult GetTablet(MemorySegment ppiSingleTablet);
+
+	@ComMethod(index = 26)
+	public abstract HResult GetTabletContextIdFromTablet(MemorySegment piTablet, MemorySegment pTcid);
+
+	@ComMethod(index = 27)
+	public abstract HResult GetTabletFromTabletContextId(int tcid, MemorySegment ppiTablet);
+
 	public boolean isEnabled() {
 		try (Arena arena = Arena.ofConfined()) {
 			MemorySegment pfEnable = arena.allocate(ValueLayout.JAVA_INT);
@@ -108,5 +134,14 @@ public abstract class IRealTimeStylus extends IUnknown implements RealTimeStylus
 
 	public void addPlugin(int index, IStylusAsyncPlugin plugin) {
 		AddStylusAsyncPlugin(index, plugin.getComPointer()).throwIfFail();
+	}
+
+	public IInkTablet getTabletFromContextId(int tcid) {
+		try (Arena arena = Arena.ofConfined()) {
+			MemorySegment ppiTablet = arena.allocate(ValueLayout.ADDRESS);
+			GetTabletFromTabletContextId(tcid, ppiTablet).throwIfFail();
+			MemorySegment piTablet = ppiTablet.get(ValueLayout.ADDRESS, 0L);
+			return ComFactory.instance().wrap(piTablet, IInkTablet.class);
+		}
 	}
 }

@@ -9,6 +9,7 @@ import org.lwjgl.glfw.GLFWNativeWin32;
 import org.lwjgl.system.MemoryUtil;
 
 import io.github.nahkd123.com4j.ComFactory;
+import io.github.nahkd123.com4j.itf.realtimestylus.IInkTablet;
 import io.github.nahkd123.com4j.itf.realtimestylus.IRealTimeStylus;
 import io.github.nahkd123.com4j.itf.realtimestylus.IStylusAsyncPlugin;
 import io.github.nahkd123.com4j.itf.realtimestylus.RealTimeStylus;
@@ -51,6 +52,14 @@ public class RealTimeStylusTest {
 		@Override
 		public void onRtsEnabled(IRealTimeStylus rts, int[] tcids) {
 			System.out.println("RealTimeStylus enabled with %d tablet contexts!".formatted(tcids.length));
+
+			for (int i = 0; i < tcids.length; i++) {
+				int tcid = tcids[i];
+				IInkTablet tablet = rts.getTabletFromContextId(tcid);
+				System.out.println("  Tablet #%d".formatted(i + 1));
+				System.out.println("    Name: %s".formatted(tablet.getName()));
+				System.out.println("    PnP ID: %s".formatted(tablet.getPlugAndPlayId()));
+			}
 		}
 
 		@Override
