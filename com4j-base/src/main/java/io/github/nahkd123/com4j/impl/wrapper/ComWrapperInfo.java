@@ -392,7 +392,7 @@ public record ComWrapperInfo<T extends IUnknown>(Class<T> interfaceType, Class<?
 	}
 
 	public T wrap(MemorySegment memory, Linker linker) throws Throwable {
-		T result = (T) constructor.invoke(memory, linker);
+		T result = (T) constructor.invoke(memory.reinterpret(ValueLayout.ADDRESS.byteSize()), linker);
 		return result;
 	}
 }
