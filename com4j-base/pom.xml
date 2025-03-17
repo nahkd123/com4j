@@ -16,19 +16,4 @@
 			<artifactId>asm</artifactId>
 		</dependency>
 	</dependencies>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.13.0</version>
-				<configuration>
-					<annotationProcessors>
-						<annotationProcessor>
-							io.github.nahkd123.com4j.annotation.Com4jAnnotationProcessor</annotationProcessor>
-					</annotationProcessors>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 </project>
