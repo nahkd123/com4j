@@ -34,15 +34,17 @@ public record Java2ComFunc(String name, MethodHandle sourceMethod, MemorySegment
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static Java2ComFunc mapArgs(String name, MethodHandle source, Arena factoryArena, Linker linker, Function<MemorySegment, IUnknown> javaObjLookup) {
 		MethodType sourceType = source.type();
-		ForeignConverter<?> ret = ForeignConverter.of(sourceType.returnType());
+		ForeignConverter<?> ret = sourceType.returnType() != void.class
+			? ForeignConverter.of(sourceType.returnType())
+			: null;
 		ForeignConverter<?>[] params = new ForeignConverter[sourceType.parameterCount()];
 
 		// Create target foreign function descriptor & method type
-		MemoryLayout targetReturnLayout = ret.layout();
+		MemoryLayout targetReturnLayout = ret != null ? ret.layout() : null;
 		MemoryLayout[] targetParamLayouts = new MemoryLayout[sourceType.parameterCount()];
 		targetParamLayouts[0] = ValueLayout.ADDRESS; // The first one will always be `this`
 
-		Class<?> targetReturnType = ret.targetType();
+		Class<?> targetReturnType = ret != null ? ret.targetType() : void.class;
 		Class<?>[] targetParamTypes = new Class[sourceType.parameterCount()];
 		targetParamTypes[0] = MemorySegment.class;
 
@@ -66,7 +68,7 @@ public record Java2ComFunc(String name, MethodHandle sourceMethod, MemorySegment
 
 			try (Arena localArena = Arena.ofConfined()) {
 				Object javaResult = source.invokeWithArguments(List.of(javaArgs));
-				return ((ForeignConverter) ret).convertToForeign(javaResult, localArena);
+				return ret != null ? ((ForeignConverter) ret).convertToForeign(javaResult, localArena) : null;
 			} catch (Throwable e) {
 				throw new RuntimeException("Invocation failed for %s".formatted(name), e);
 			}
