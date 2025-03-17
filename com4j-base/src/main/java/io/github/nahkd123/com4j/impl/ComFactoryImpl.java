@@ -44,6 +44,8 @@ public class ComFactoryImpl implements ComFactory {
 
 	private MethodHandle CoInitialize;
 	private MethodHandle CoCreateInstance;
+	private MethodHandle CoTaskMemAlloc;
+	private MethodHandle CoTaskMemFree;
 
 	// Wrapping
 	private Map<Class<?>, Java2ComVtbl> java2ComVtbls = new ConcurrentHashMap<>();
@@ -70,6 +72,13 @@ public class ComFactoryImpl implements ComFactory {
 			ValueLayout.JAVA_INT.withName("dwClsContext"),
 			Guid.LAYOUT.withName("riid"),
 			ValueLayout.ADDRESS.withName("ppV")));
+
+		CoTaskMemAlloc = linker.downcallHandle(ole32.findOrThrow("CoTaskMemAlloc"), FunctionDescriptor.of(
+			ValueLayout.ADDRESS,
+			ValueLayout.JAVA_LONG.withName("cb")));
+
+		CoTaskMemFree = linker.downcallHandle(ole32.findOrThrow("CoTaskMemFree"), FunctionDescriptor.ofVoid(
+			ValueLayout.ADDRESS.withName("pv")));
 	}
 
 	public static ComFactoryImpl getInstance() {
@@ -176,6 +185,25 @@ public class ComFactoryImpl implements ComFactory {
 			throw e;
 		} catch (Throwable t) {
 			throw new RuntimeException(t);
+		}
+	}
+
+	@Override
+	public MemorySegment memAlloc(long size) {
+		try {
+			MemorySegment pv = (MemorySegment) CoTaskMemAlloc.invoke(size);
+			return pv.equals(MemorySegment.NULL) ? null : pv;
+		} catch (Throwable e) {
+			throw new RuntimeException("Failed to invoke CoTaskMemAlloc()", e);
+		}
+	}
+
+	@Override
+	public void memFree(MemorySegment v) {
+		try {
+			CoTaskMemFree.invoke(v);
+		} catch (Throwable e) {
+			throw new RuntimeException("Failed to invoke CoTaskMemFree()", e);
 		}
 	}
 }

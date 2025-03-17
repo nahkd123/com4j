@@ -1,6 +1,8 @@
 package io.github.nahkd123.com4j.itf.realtimestylus;
 
+import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SequenceLayout;
 import java.lang.foreign.ValueLayout;
 import java.util.Collection;
 import java.util.Set;
@@ -8,7 +10,10 @@ import java.util.Set;
 import io.github.nahkd123.com4j.annotation.ComInterface;
 import io.github.nahkd123.com4j.annotation.ComMethod;
 import io.github.nahkd123.com4j.itf.IUnknown;
+import io.github.nahkd123.com4j.types.realtimestylus.Packet;
+import io.github.nahkd123.com4j.types.realtimestylus.PacketsIO;
 import io.github.nahkd123.com4j.types.realtimestylus.RtsEvent;
+import io.github.nahkd123.com4j.types.realtimestylus.StylusInfo;
 import io.github.nahkd123.com4j.types.rpc.RpcSystemEventData;
 import io.github.nahkd123.com4j.win32.HResult;
 import io.github.nahkd123.com4j.win32.Win32Exception;
@@ -77,16 +82,41 @@ public abstract class IStylusPlugin extends IUnknown {
 		}
 	}
 
+	private HResult applyPacketEvents(IRealTimeStylus rts, MemorySegment pStylusInfo, int cPktCount, int cPktBuffLength, MemorySegment pPackets, MemorySegment pcInOutPkts, MemorySegment ppInOutPkts, PacketEventCallback callback) {
+		try {
+			StylusInfo stylus = StylusInfo.of(pStylusInfo.reinterpret(StylusInfo.LAYOUT.byteSize()));
+			PacketsIO io = new PacketsIOImpl(cPktCount, cPktBuffLength, pPackets);
+			callback.apply(rts, stylus, io);
+			// TODO output
+			pPackets
+				.reinterpret(ValueLayout.JAVA_INT.byteSize())
+				.set(ValueLayout.JAVA_INT, 0L, 0);
+			ppInOutPkts
+				.reinterpret(ValueLayout.ADDRESS.byteSize())
+				.set(ValueLayout.ADDRESS, 0L, MemorySegment.NULL);
+			return HResult.SUCCEED;
+		} catch (Throwable t) {
+			t.printStackTrace();
+			return HResult.E_FAIL;
+		}
+	}
+
 	@ComMethod(index = 7)
 	public HResult StylusDown(IRealTimeStylus rts, MemorySegment pStylusInfo, int cPropCountPerPkt, MemorySegment pPacket, MemorySegment ppInOutPkt) {
-		// TODO
-		return HResult.SUCCEED;
+		return applyPacketEvents(
+			rts, pStylusInfo,
+			1, cPropCountPerPkt, pPacket,
+			null, ppInOutPkt,
+			this::onStylusUpPacket);
 	}
 
 	@ComMethod(index = 8)
 	public HResult StylusUp(IRealTimeStylus rts, MemorySegment pStylusInfo, int cPropCountPerPkt, MemorySegment pPacket, MemorySegment ppInOutPkt) {
-		// TODO
-		return HResult.SUCCEED;
+		return applyPacketEvents(
+			rts, pStylusInfo,
+			1, cPropCountPerPkt, pPacket,
+			null, ppInOutPkt,
+			this::onStylusDownPacket);
 	}
 
 	@ComMethod(index = 9)
@@ -103,14 +133,20 @@ public abstract class IStylusPlugin extends IUnknown {
 
 	@ComMethod(index = 11)
 	public HResult InAirPackets(IRealTimeStylus rts, MemorySegment pStylusInfo, int cPktCount, int cPktBuffLength, MemorySegment pPackets, MemorySegment pcInOutPkts, MemorySegment ppInOutPkts) {
-		// TODO
-		return HResult.SUCCEED;
+		return applyPacketEvents(
+			rts, pStylusInfo,
+			cPktCount, cPktBuffLength, pPackets,
+			pcInOutPkts, ppInOutPkts,
+			this::onAirPackets);
 	}
 
 	@ComMethod(index = 12)
 	public HResult Packets(IRealTimeStylus rts, MemorySegment pStylusInfo, int cPktCount, int cPktBuffLength, MemorySegment pPackets, MemorySegment pcInOutPkts, MemorySegment ppInOutPkts) {
-		// TODO
-		return HResult.SUCCEED;
+		return applyPacketEvents(
+			rts, pStylusInfo,
+			cPktCount, cPktBuffLength, pPackets,
+			pcInOutPkts, ppInOutPkts,
+			this::onPackets);
 	}
 
 	@ComMethod(index = 13)
@@ -126,7 +162,7 @@ public abstract class IStylusPlugin extends IUnknown {
 	}
 
 	@ComMethod(index = 15)
-	public HResult TabletAdded(IRealTimeStylus rts, MemorySegment piTablet) {
+	public HResult TabletAdded(IRealTimeStylus rts, IInkTablet tablet) {
 		// TODO
 		return HResult.SUCCEED;
 	}
@@ -175,6 +211,14 @@ public abstract class IStylusPlugin extends IUnknown {
 
 	public void onStylusOutOfRange(IRealTimeStylus rts, int tcid, int sid) {}
 
+	public void onStylusUpPacket(IRealTimeStylus rts, StylusInfo stylus, PacketsIO io) {}
+
+	public void onStylusDownPacket(IRealTimeStylus rts, StylusInfo stylus, PacketsIO io) {}
+
+	public void onPackets(IRealTimeStylus rts, StylusInfo stylus, PacketsIO io) {}
+
+	public void onAirPackets(IRealTimeStylus rts, StylusInfo stylus, PacketsIO io) {}
+
 	/**
 	 * <p>
 	 * Get a collection of events that this stylus plugin is interested in
@@ -193,5 +237,57 @@ public abstract class IStylusPlugin extends IUnknown {
 			RtsEvent.StylusUp,
 			RtsEvent.SystemEvent,
 			RtsEvent.CustomStylusDataAdded);
+	}
+
+	@FunctionalInterface
+	private static interface PacketEventCallback {
+		void apply(IRealTimeStylus rts, StylusInfo stylus, PacketsIO io);
+	}
+
+	private static class PacketsIOImpl implements PacketsIO {
+		private int inputs;
+		private int sizePerPacket;
+		private MemorySegment inputBuf;
+		private SequenceLayout layout;
+
+		public PacketsIOImpl(int inputs, int bufLen, MemorySegment inputBuf) {
+			this.inputs = inputs;
+			this.inputBuf = inputBuf.reinterpret(MemoryLayout
+				.sequenceLayout(bufLen, ValueLayout.JAVA_INT)
+				.byteSize());
+			this.sizePerPacket = bufLen / inputs;
+			this.layout = MemoryLayout.sequenceLayout(sizePerPacket, ValueLayout.JAVA_INT);
+		}
+
+		@Override
+		public int getInputCount() { return inputs; }
+
+		@Override
+		public Packet getInput(int index) {
+			if (index < 0 || index >= inputs) throw new IndexOutOfBoundsException();
+			MemorySegment packetBuf = inputBuf.asSlice(layout.byteSize() * index, layout);
+			return new MappedPacketImpl(packetBuf, sizePerPacket);
+		}
+	}
+
+	private static class MappedPacketImpl implements Packet {
+		private MemorySegment memory;
+		private int size;
+
+		public MappedPacketImpl(MemorySegment memory, int size) {
+			this.memory = memory.reinterpret(MemoryLayout.sequenceLayout(size, ValueLayout.JAVA_INT).byteSize());
+			this.size = size;
+		}
+
+		@Override
+		public int get(int index) {
+			if (index < 0 || index >= size) throw new IndexOutOfBoundsException();
+			return memory.get(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT.byteSize() * index);
+		}
+
+		@Override
+		public int size() {
+			return size;
+		}
 	}
 }

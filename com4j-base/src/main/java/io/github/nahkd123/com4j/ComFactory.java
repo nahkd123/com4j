@@ -105,12 +105,39 @@ public interface ComFactory {
 
 	/**
 	 * <p>
-	 * Get BSTR utils for managing BSTRs.
+	 * Get BSTR utils for managing BSTRs. BSTR is part of Automation and it may be
+	 * moved to {@code com4j-automation} module in the future (next major version).
 	 * </p>
 	 * 
 	 * @return The BSTR utils.
 	 */
 	Bstr bstr();
+
+	/**
+	 * <p>
+	 * Allocate a block of task memory by calling {@code CoTaskMemAlloc()}. Use this
+	 * method to allocate memory for passing to COM method that uses
+	 * {@code CoTaskMemFree()} to free the memory block.
+	 * </p>
+	 * <p>
+	 * If allocation failed, this method returns {@code null}.
+	 * </p>
+	 * 
+	 * @param size The size of memory block to be allocated in bytes.
+	 * @return A pointer to the start of allocated memory block.
+	 */
+	MemorySegment memAlloc(long size);
+
+	/**
+	 * <p>
+	 * Free the task memory block that was allocated with {@link #memAlloc(long)}
+	 * (or {@code CoTaskMemAlloc()}).
+	 * </p>
+	 * 
+	 * @param v The pointer to memory block allocated using {@link #memAlloc(long)}
+	 *          or {@code CoTaskMemAlloc()}.
+	 */
+	void memFree(MemorySegment v);
 
 	/**
 	 * <p>

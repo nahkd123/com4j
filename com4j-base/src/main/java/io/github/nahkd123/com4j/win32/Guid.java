@@ -159,12 +159,16 @@ public record Guid(int data1, short data2, short data3, byte data40, byte data41
 	@ConvertToForeign
 	public MemorySegment asMemorySegment(Arena arena) {
 		MemorySegment memory = arena.allocate(LAYOUT);
+		setToMemorySegment(memory);
+		return memory;
+	}
+
+	public void setToMemorySegment(MemorySegment memory) {
 		byte[] data4 = data4();
 		VH_DATA1.set(memory, 0L, data1);
 		VH_DATA2.set(memory, 0L, data2);
 		VH_DATA3.set(memory, 0L, data3);
 		for (int i = 0; i < 8; i++) VH_DATA4.set(memory, 0L, i, data4[i]);
-		return memory;
 	}
 
 	@Override
