@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 
 import io.github.nahkd123.com4j.Bstr;
 
+// BSTR appears to be belong to Automation
 public class BstrImpl implements Bstr {
 	private MethodHandle SysAllocString;
 	private MethodHandle SysFreeString;
@@ -25,16 +26,15 @@ public class BstrImpl implements Bstr {
 
 	@Override
 	public String get(MemorySegment bstr) {
-		String s = "";
-		char ch;
-		do {
-			ch = bstr
-				.reinterpret(ValueLayout.JAVA_CHAR.scale(0L, s.length() + 1))
-				.get(ValueLayout.JAVA_CHAR, s.length() * 2);
-			if (ch == '\0') break;
-			s += ch;
-		} while (ch != '\0');
-		return s;
+		// BSTR is a pointer to the first character of the string, with 32-bit integer
+		// before it.
+		// https://learn.microsoft.com/en-us/previous-versions/windows/desktop/automat/bstr
+		int bytes = MemorySegment
+			.ofAddress(bstr.address() - 4)
+			.reinterpret(ValueLayout.JAVA_INT.byteSize())
+			.get(ValueLayout.JAVA_INT, 0L);
+		byte[] data = bstr.reinterpret(bytes).toArray(ValueLayout.JAVA_BYTE);
+		return new String(data, StandardCharsets.UTF_16LE);
 	}
 
 	@Override
